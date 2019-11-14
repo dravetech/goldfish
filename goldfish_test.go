@@ -2,8 +2,6 @@ package golden
 
 import "testing"
 
-import "os/exec"
-
 func TestSomething(t *testing.T) {
 	cases := []CommandTestCase{
 		{
@@ -12,10 +10,9 @@ func TestSomething(t *testing.T) {
 			Command:    `echo "hello, how are you?"`,
 		},
 		{
-			Name:        "command_not_in_path",
-			GoldenPath:  "testdata",
-			Command:     "ls-la",
-			ExpectedErr: exec.ErrNotFound{},
+			Name:       "command_not_in_path",
+			GoldenPath: "testdata",
+			Command:    "ls-la",
 		},
 		{
 			Name:       "command_failed",
