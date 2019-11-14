@@ -1,7 +1,7 @@
 /*
 Package goldfish is used to help testing the command lines
 */
-package golden
+package goldfish
 
 import (
 	"bytes"
