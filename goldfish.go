@@ -5,7 +5,6 @@ package goldfish
 
 import (
 	"bytes"
-	"flag"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -13,10 +12,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-)
-
-var (
-	update = flag.Bool("test.update", false, "update golden file")
 )
 
 // CommandTestCase case is a struct that defines a test case for a command
@@ -68,12 +63,12 @@ func (tc *CommandTestCase) Run(t *testing.T) {
 		t.Errorf("exit code doesn't match; got (%d), expected (%d)\n", exitCode, tc.ExitCode)
 	}
 
-	goldenOut := get(t, stdout.Bytes(), tc.StdoutGoldenPath(), tc.Update || *update)
+	goldenOut := get(t, stdout.Bytes(), tc.StdoutGoldenPath(), tc.Update)
 	if !cmp.Equal(stdout.String(), string(goldenOut)) {
 		t.Error("stdout doesn't match:\n" + cmp.Diff(stdout.String(), string(goldenOut)))
 	}
 
-	goldenErr := get(t, stderr.Bytes(), tc.StderrGoldenPath(), tc.Update || *update)
+	goldenErr := get(t, stderr.Bytes(), tc.StderrGoldenPath(), tc.Update)
 	if !cmp.Equal(stderr.String(), string(goldenErr)) {
 		t.Error("stderr doesn't match:\n" + cmp.Diff(stderr.String(), string(goldenErr)))
 	}
