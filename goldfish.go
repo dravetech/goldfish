@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -16,16 +15,12 @@ import (
 
 // CommandTestCase case is a struct that defines a test case for a command
 type CommandTestCase struct {
-	Name        string // Name of the test case, it will be used as filename for the golden files
-	GoldenPath  string // Path to the golden files
-	Command     string // Command to run
-	Update      bool   // Update the golden files for this test case
-	ExitCode    int    // Expected exit code
+	Name        string   // Name of the test case, it will be used as filename for the golden files
+	GoldenPath  string   // Path to the golden files
+	Command     []string // Command to run
+	Update      bool     // Update the golden files for this test case
+	ExitCode    int      // Expected exit code
 	ExpectedErr error
-}
-
-func parseCommand(command string) []string {
-	return strings.Split(command, " ")
 }
 
 func (tc *CommandTestCase) StdoutGoldenPath() string {
@@ -38,8 +33,7 @@ func (tc *CommandTestCase) StderrGoldenPath() string {
 
 // Run executes the command and validates output
 func (tc *CommandTestCase) Run(t *testing.T) {
-	c := parseCommand(tc.Command)
-	cmd := exec.Command(c[0], c[1:]...)
+	cmd := exec.Command(tc.Command[0], tc.Command[1:]...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

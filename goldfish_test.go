@@ -7,17 +7,17 @@ func TestSomething(t *testing.T) {
 		{
 			Name:       "everything_fine",
 			GoldenPath: "testdata",
-			Command:    `echo "hello, how are you?"`,
+			Command:    []string{"echo", "hello, how are you?"},
 		},
 		{
 			Name:       "command_not_in_path",
 			GoldenPath: "testdata",
-			Command:    "ls-la",
+			Command:    []string{"ls-la"},
 		},
 		{
 			Name:       "command_failed",
 			GoldenPath: "testdata",
-			Command:    "ls /lalalalalalala",
+			Command:    []string{"ls", "/lalalalalalala"},
 			ExitCode:   2,
 		},
 	}
