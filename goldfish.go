@@ -94,8 +94,14 @@ func compareGoldenJSON(t *testing.T, update bool, path string, buf bytes.Buffer,
 	opts := cmp.Options{}
 	if useRegex {
 		opts = append(opts, cmp.Comparer(func(x, y string) bool {
-			re1, _ := regexp.Compile(x)
-			re2, _ := regexp.Compile(y)
+			re1, err := regexp.Compile(x)
+			if err != nil {
+				re1 = regexp.MustCompile("ishallnotmatchanythingatall432423")
+			}
+			re2, err := regexp.Compile(y)
+			if err != nil {
+				re2 = regexp.MustCompile("ishallnotmatchanythingatall432423")
+			}
 			return re1.Match([]byte(y)) || re2.Match([]byte(x)) || x == y
 		}))
 	}
