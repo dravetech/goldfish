@@ -10,14 +10,17 @@ func TestPass(t *testing.T) {
 			Command:    []string{"echo", "hello, how are you?"},
 		},
 		{
-			Name:       "json_output_with_regex",
-			GoldenPath: "testdata",
-			Command:    []string{"echo", `{"asd":"qweqwe","qwe": 123}`},
+			Name:        "json_output_with_regex",
+			GoldenPath:  "testdata",
+			StdoutRegex: true,
+			StdoutJSON:  true,
+			Command:     []string{"echo", `{"asd":"qweqwe","qwe": [1, 2, 3]}`},
 		},
 		{
-			Name:       "multiline_regex",
-			GoldenPath: "testdata",
-			Command:    []string{"cat", "testdata/multiline_regex.mock"},
+			Name:        "multiline_regex",
+			GoldenPath:  "testdata",
+			StdoutRegex: true,
+			Command:     []string{"cat", "testdata/multiline_regex.mock"},
 		},
 		{
 			Name:       "command_failed",

@@ -5,6 +5,7 @@ package goldfish
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -21,7 +22,10 @@ type CommandTestCase struct {
 	Command     []string // Command to run
 	Update      bool     // Update the golden files for this test case
 	ExitCode    int      // Expected exit code
-	ExpectedErr error
+	StdoutRegex bool
+	StderrRegex bool
+	StdoutJSON  bool
+	StderrJSON  bool
 }
 
 func (tc *CommandTestCase) StdoutGoldenPath() string {
@@ -58,16 +62,61 @@ func (tc *CommandTestCase) Run(t *testing.T) {
 		t.Errorf("exit code doesn't match; got (%d), expected (%d)\n", exitCode, tc.ExitCode)
 	}
 
-	goldenOut := get(t, stdout.Bytes(), tc.StdoutGoldenPath(), tc.Update)
-	re := regexp.MustCompile(string(goldenOut))
-	if !re.Match(stdout.Bytes()) {
-		t.Error("stdout doesn't match:\n" + cmp.Diff(stdout.String(), string(goldenOut)))
+	compareGolden(t, tc.Update, tc.StdoutGoldenPath(), stdout, "stdout", tc.StdoutRegex, tc.StdoutJSON)
+	compareGolden(t, tc.Update, tc.StderrGoldenPath(), stderr, "stderr", tc.StderrRegex, tc.StderrJSON)
+}
+
+func compareGoldenString(t *testing.T, update bool, path string, buf bytes.Buffer, out string, useRegex bool) {
+	goldenOut := get(t, buf.Bytes(), path, update)
+
+	match := false
+
+	if useRegex {
+		re := regexp.MustCompile(string(goldenOut))
+		match = re.Match(buf.Bytes())
+	} else {
+		match = cmp.Equal(buf.String(), string(goldenOut))
+	}
+	if !match {
+		t.Errorf("%s doesn't match:\n%s", out, cmp.Diff(buf.String(), string(goldenOut)))
+	}
+}
+
+func compareGoldenJSON(t *testing.T, update bool, path string, buf bytes.Buffer, out string, useRegex bool) {
+	goldenOut := get(t, buf.Bytes(), path, update)
+
+	goldenData := new(interface{})
+	if err := json.Unmarshal(goldenOut, goldenData); err != nil {
+		t.Log("couldn't unmarshal golden data: " + err.Error())
+		t.FailNow()
 	}
 
-	goldenErr := get(t, stderr.Bytes(), tc.StderrGoldenPath(), tc.Update)
-	re = regexp.MustCompile(string(goldenErr))
-	if !re.Match(stderr.Bytes()) {
-		t.Error("stderr doesn't match:\n" + cmp.Diff(stderr.String(), string(goldenErr)))
+	opts := cmp.Options{}
+	if useRegex {
+		opts = append(opts, cmp.Comparer(func(x, y string) bool {
+			re1 := regexp.MustCompile(x)
+			re2 := regexp.MustCompile(y)
+			return re1.Match([]byte(y)) || re2.Match([]byte(x))
+		}))
+	}
+
+	gotData := new(interface{})
+	if err := json.Unmarshal(buf.Bytes(), gotData); err != nil {
+		t.Log("couldn't unmarshal gotten data: " + err.Error())
+		t.FailNow()
+	}
+
+	if !cmp.Equal(gotData, goldenData, opts...) {
+		t.Errorf("%s doesn't match:\n%s", out, cmp.Diff(gotData, goldenData, opts...))
+	}
+
+}
+
+func compareGolden(t *testing.T, update bool, path string, buf bytes.Buffer, out string, useRegex bool, useJSON bool) {
+	if useJSON {
+		compareGoldenJSON(t, update, path, buf, out, useRegex)
+	} else {
+		compareGoldenString(t, update, path, buf, out, useRegex)
 	}
 }
 
