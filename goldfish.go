@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -58,12 +59,14 @@ func (tc *CommandTestCase) Run(t *testing.T) {
 	}
 
 	goldenOut := get(t, stdout.Bytes(), tc.StdoutGoldenPath(), tc.Update)
-	if !cmp.Equal(stdout.String(), string(goldenOut)) {
+	re := regexp.MustCompile(string(goldenOut))
+	if !re.Match(stdout.Bytes()) {
 		t.Error("stdout doesn't match:\n" + cmp.Diff(stdout.String(), string(goldenOut)))
 	}
 
 	goldenErr := get(t, stderr.Bytes(), tc.StderrGoldenPath(), tc.Update)
-	if !cmp.Equal(stderr.String(), string(goldenErr)) {
+	re = regexp.MustCompile(string(goldenErr))
+	if !re.Match(stderr.Bytes()) {
 		t.Error("stderr doesn't match:\n" + cmp.Diff(stderr.String(), string(goldenErr)))
 	}
 }
