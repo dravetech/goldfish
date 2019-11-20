@@ -67,7 +67,7 @@ func (tc *CommandTestCase) Run(t *testing.T) {
 }
 
 func compareGoldenString(t *testing.T, update bool, path string, buf bytes.Buffer, out string, useRegex bool) {
-	goldenOut := get(t, buf.Bytes(), path, update)
+	goldenOut := get(t, buf.Bytes(), path, update, false)
 
 	match := false
 
@@ -83,7 +83,7 @@ func compareGoldenString(t *testing.T, update bool, path string, buf bytes.Buffe
 }
 
 func compareGoldenJSON(t *testing.T, update bool, path string, buf bytes.Buffer, out string, useRegex bool) {
-	goldenOut := get(t, buf.Bytes(), path, update)
+	goldenOut := get(t, buf.Bytes(), path, update, true)
 
 	goldenData := new(interface{})
 	if err := json.Unmarshal(goldenOut, goldenData); err != nil {
@@ -126,8 +126,16 @@ func compareGolden(t *testing.T, update bool, path string, buf bytes.Buffer, out
 	}
 }
 
-func get(t *testing.T, actual []byte, goldenPath string, updateGolden bool) []byte {
+func get(t *testing.T, actual []byte, goldenPath string, updateGolden bool, useJSON bool) []byte {
 	if updateGolden {
+		if useJSON {
+			var err error
+			actual, err = json.Marshal(actual)
+			if err != nil {
+				t.Log("couldn't marshal response: " + err.Error())
+				t.FailNow()
+			}
+		}
 		if err := ioutil.WriteFile(goldenPath, actual, 0644); err != nil {
 			t.Fatal(err)
 		}
