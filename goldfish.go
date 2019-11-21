@@ -128,14 +128,6 @@ func compareGolden(t *testing.T, update bool, path string, buf bytes.Buffer, out
 
 func get(t *testing.T, actual []byte, goldenPath string, updateGolden bool, useJSON bool) []byte {
 	if updateGolden {
-		if useJSON {
-			var err error
-			actual, err = json.Marshal(actual)
-			if err != nil {
-				t.Log("couldn't marshal response: " + err.Error())
-				t.FailNow()
-			}
-		}
 		if err := ioutil.WriteFile(goldenPath, actual, 0644); err != nil {
 			t.Fatal(err)
 		}
